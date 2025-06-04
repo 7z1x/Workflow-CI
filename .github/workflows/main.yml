@@ -1,0 +1,52 @@
+name: MLflow CI Workflow - Basic Training
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  train_model:
+    runs-on: ubuntu-latest # Menjalankan job pada runner Ubuntu terbaru
+    
+    defaults: # Ini akan mengatur working-directory untuk semua run steps di job ini
+      run:
+        working-directory: ./MLProject # Set direktori kerja ke folder MLProject
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        # Tidak perlu working-directory di sini karena checkout harus dari root repo
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10' # Sesuaikan dengan versi Python di conda.yaml
+
+      - name: Setup Miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: mlflow-env-ci # Nama environment dari conda.yaml
+          environment-file: MLProject/conda.yaml # Path ke conda.yaml relatif dari root repo
+          python-version: '3.10' # Sesuaikan
+          auto-activate-base: false # Kita akan mengaktifkan env spesifik
+          use-only-tar-bz2: true # Untuk unduhan yang lebih stabil
+
+      - name: Run MLflow Project
+        # shell: bash -l {0} # Baris shell dihapus atau dikomentari untuk menggunakan default
+        run: |
+          echo "--- Checking Environment ---"
+          conda env list
+          echo "CONDA_DEFAULT_ENV: $CONDA_DEFAULT_ENV"
+          echo "PATH: $PATH"
+          which python
+          python --version
+          which mlflow
+          mlflow --version
+          echo "--- End Checking Environment ---"
+
+          echo "Starting MLflow run..."
+          # Perintah dijalankan dari dalam MLProject/ karena working-directory sudah diatur
+          mlflow run . --experiment-name "BreastCancerCI-GitHubActions"
+          echo "MLflow run finished."
