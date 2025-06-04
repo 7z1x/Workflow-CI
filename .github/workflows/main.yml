@@ -34,18 +34,8 @@ jobs:
           use-only-tar-bz2: true # Untuk unduhan yang lebih stabil
 
       - name: Run MLflow Project
-        # shell: bash -l {0} # Baris shell dihapus atau dikomentari untuk menggunakan default
+        shell: bash -l {0} # Penting agar environment conda teraktivasi dengan benar
         run: |
-          echo "--- Checking Environment ---"
-          conda env list
-          echo "CONDA_DEFAULT_ENV: $CONDA_DEFAULT_ENV"
-          echo "PATH: $PATH"
-          which python
-          python --version
-          which mlflow
-          mlflow --version
-          echo "--- End Checking Environment ---"
-
           echo "Starting MLflow run..."
           # Perintah dijalankan dari dalam MLProject/ karena working-directory sudah diatur
           mlflow run . --experiment-name "BreastCancerCI-GitHubActions"
