@@ -27,7 +27,7 @@ jobs:
       - name: Setup Miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
-          activate-environment: mlflow-env-ci # Nama environment dari conda.yaml
+          activate-environment: mlflow-env # Nama environment dari conda.yaml
           environment-file: MLProject/conda.yaml # Path ke conda.yaml relatif dari root repo
           python-version: '3.10' # Sesuaikan
           auto-activate-base: false # Kita akan mengaktifkan env spesifik
