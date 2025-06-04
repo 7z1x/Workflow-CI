@@ -10,7 +10,6 @@ import seaborn as sns
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
 from imblearn.over_sampling import SMOTE
 
-
 X_train_scaled = pd.read_csv('breast_cancer_dataset_preprocessing/X_train_scaled.csv')
 X_test_scaled = pd.read_csv('breast_cancer_dataset_preprocessing/X_test_scaled.csv')
 y_train = pd.read_csv('breast_cancer_dataset_preprocessing/y_train.csv')
@@ -45,15 +44,15 @@ mlflow.log_metric("precision", prec)
 mlflow.log_metric("recall", rec)
 mlflow.log_metric("f1_score", f1)
 
-run_id = os.environ.get('MLFLOW_RUN_ID')
-
-if run_id:
-    print(f"MLflow Run ID (from env): {run_id}")
+active_run_obj = mlflow.active_run()
+if active_run_obj:
+    run_id = active_run_obj.info.run_id
+    print(f"MLflow Run ID (from active_run): {run_id}")
     with open("mlflow_run_id.txt", "w") as f:
         f.write(run_id)
     mlflow.log_artifact("mlflow_run_id.txt", "run_info")
 else:
-    print("Warning: MLFLOW_RUN_ID environment variable not found.")
+    print("Error: No active MLflow run found by mlflow.active_run(). Cannot save run_id.")
 
 print("Model dilatih dan dicatat di MLflow.")
 print(f"Accuracy: {acc}")
