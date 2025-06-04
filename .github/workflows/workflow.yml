@@ -1,4 +1,4 @@
-name: CI Workflow
+name: CI Workflow for ML Model - Kriteria 3 Advanced
 
 on:
   push:
@@ -45,11 +45,23 @@ jobs:
           cd MLProject
           mlflow run . --experiment-name "Breast_Cancer_CI_Run"
           echo "MLflow project run finished."
+          # Pastikan mlflow_run_id.txt dibuat di dalam MLProject/
+          if [ ! -f mlflow_run_id.txt ]; then
+            echo "Error: mlflow_run_id.txt was not created by modeling.py in MLProject/"
+            ls -la # Tampilkan isi direktori untuk debugging
+            exit 1
+          fi
           cd $GITHUB_WORKSPACE
 
       - name: 6. Get MLflow Run ID
         id: get_run_id
         run: |
+          # Pastikan file ada sebelum mencoba membacanya
+          if [ ! -f MLProject/mlflow_run_id.txt ]; then
+            echo "Error: MLProject/mlflow_run_id.txt not found in Get MLflow Run ID step."
+            ls -la MLProject/ # Tampilkan isi direktori MLProject untuk debugging
+            exit 1
+          fi
           RUN_ID_VALUE=$(cat MLProject/mlflow_run_id.txt)
           echo "Raw Run ID from file: $RUN_ID_VALUE"
           CLEANED_RUN_ID=$(echo -n $RUN_ID_VALUE | tr -d '[:space:]')
@@ -61,25 +73,33 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: mlruns-output
-          path: MLProject/mlruns/
+          # Path harus benar relatif dari GITHUB_WORKSPACE
+          path: ${{ github.workspace }}/MLProject/mlruns/
           if-no-files-found: warn
 
       - name: Upload mlflow_run_id.txt
         uses: actions/upload-artifact@v4
         with:
           name: mlflow-run-id-file
-          path: MLProject/mlflow_run_id.txt
+          path: ${{ github.workspace }}/MLProject/mlflow_run_id.txt
           if-no-files-found: warn
 
       - name: 8. Build Docker Image with MLflow
         env:
           MLFLOW_RUN_ID: ${{ steps.get_run_id.outputs.run_id_value }}
+          # Tambahkan MLFLOW_TRACKING_URI untuk menunjuk ke direktori mlruns lokal
+          MLFLOW_TRACKING_URI: file://${{ github.workspace }}/MLProject/mlruns
         run: |
           echo "Building Docker image for Run ID: $MLFLOW_RUN_ID"
+          echo "Using MLFLOW_TRACKING_URI: $MLFLOW_TRACKING_URI"
+          
           if [ -z "$MLFLOW_RUN_ID" ]; then
             echo "Error: MLFLOW_RUN_ID is empty. Cannot build Docker image."
             exit 1
           fi
+          
+          # Ganti 'fahmi123zul' dengan username Docker Hub-mu
+          # Ganti 'breast-cancer-model' dengan nama repositori Docker Hub-mu
           DOCKER_IMAGE_NAME="fahmi123zul/breast-cancer-model:${{ github.sha }}"
           echo "Target Docker Image Name: $DOCKER_IMAGE_NAME"
           
@@ -98,6 +118,8 @@ jobs:
 
       - name: 10. Push Docker Image to Docker Hub
         run: |
+          # Ganti 'fahmi123zul' dengan username Docker Hub-mu
+          # Ganti 'breast-cancer-model' dengan nama repositori Docker Hub-mu
           DOCKER_IMAGE_NAME="fahmi123zul/breast-cancer-model:${{ github.sha }}"
           echo "Pushing Docker Image: $DOCKER_IMAGE_NAME"
           docker push $DOCKER_IMAGE_NAME
