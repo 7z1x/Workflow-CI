@@ -21,6 +21,8 @@ y_test = y_test.values.ravel()
 smote = SMOTE(random_state=42)
 X_train_smote, y_train_smote = smote.fit_resample(X_train_scaled, y_train)
 
+# Modifikasi autolog: nonaktifkan logging model, biarkan untuk parameter/metrik jika diinginkan
+# Kamu bisa juga menonaktifkan autolog sepenuhnya jika semua logging dilakukan manual.
 mlflow.xgboost.autolog(log_models=False, log_input_examples=False, log_model_signatures=False, log_datasets=False)
 
 model = xgb.XGBClassifier(
@@ -39,11 +41,13 @@ prec = precision_score(y_test, y_pred)
 rec = recall_score(y_test, y_pred)
 f1 = f1_score(y_test, y_pred)
 
+# Log metrik secara manual
 mlflow.log_metric("accuracy", acc)
 mlflow.log_metric("precision", prec)
 mlflow.log_metric("recall", rec)
 mlflow.log_metric("f1_score", f1)
 
+# Dapatkan Run ID dari active_run() yang disediakan oleh MLflow
 active_run_obj = mlflow.active_run()
 if active_run_obj:
     run_id = active_run_obj.info.run_id
@@ -52,17 +56,19 @@ if active_run_obj:
         f.write(run_id)
     mlflow.log_artifact("mlflow_run_id.txt", "run_info")
 
+    # Log model XGBoost secara manual ke run yang aktif
     print(f"Manually logging XGBoost model to run ID: {run_id}")
     mlflow.xgboost.log_model(
         xgb_model=model,
-        artifact_path="model", 
+        artifact_path="model",  # Nama artefak standar yang biasanya dicari build-docker
         # registered_model_name="BreastCancerXGBoostCI" # Opsional: jika ingin mendaftarkan model
     )
     print("XGBoost model manually logged.")
 
 else:
     print("Error: No active MLflow run found by mlflow.active_run(). Cannot save run_id or log model.")
-    exit(1) # Keluar jika tidak ada run aktif, karena run_id penting
+    # Sebaiknya keluar jika tidak ada run aktif, karena run_id penting untuk langkah selanjutnya
+    exit(1) 
 
 print("Model dilatih dan dicatat di MLflow.")
 print(f"Accuracy: {acc}")
