@@ -22,7 +22,7 @@ y_test = y_test.values.ravel()
 smote = SMOTE(random_state=42)
 X_train_smote, y_train_smote = smote.fit_resample(X_train_scaled, y_train)
 
-mlflow.set_experiment("model_autolog")
+mlflow.set_experiment("modelAutolog")
 mlflow.xgboost.autolog()
 
 with mlflow.start_run():
