@@ -21,7 +21,7 @@ y_test = y_test.values.ravel()
 smote = SMOTE(random_state=42)
 X_train_smote, y_train_smote = smote.fit_resample(X_train_scaled, y_train)
 
-mlflow.xgboost.autolog(log_models=True, log_input_examples=False, log_model_signatures=False)
+mlflow.xgboost.autolog(log_models=False, log_input_examples=False, log_model_signatures=False, log_datasets=False)
 
 model = xgb.XGBClassifier(
     n_estimators=100,
@@ -51,8 +51,18 @@ if active_run_obj:
     with open("mlflow_run_id.txt", "w") as f:
         f.write(run_id)
     mlflow.log_artifact("mlflow_run_id.txt", "run_info")
+
+    print(f"Manually logging XGBoost model to run ID: {run_id}")
+    mlflow.xgboost.log_model(
+        xgb_model=model,
+        artifact_path="model", 
+        # registered_model_name="BreastCancerXGBoostCI" # Opsional: jika ingin mendaftarkan model
+    )
+    print("XGBoost model manually logged.")
+
 else:
-    print("Error: No active MLflow run found by mlflow.active_run(). Cannot save run_id.")
+    print("Error: No active MLflow run found by mlflow.active_run(). Cannot save run_id or log model.")
+    exit(1) # Keluar jika tidak ada run aktif, karena run_id penting
 
 print("Model dilatih dan dicatat di MLflow.")
 print(f"Accuracy: {acc}")
