@@ -15,4 +15,4 @@ dependencies:
   - shap
   - matplotlib
   - mpld3
-name: mlflow-env
+name: mlflow-env-ci
